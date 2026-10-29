@@ -387,7 +387,7 @@ h1 > span {
 
 .function-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: clamp(12px, 1.25vw, 20px);
     height: 100%;
@@ -512,14 +512,15 @@ h1 > span {
 .function-card h2 {
     position: relative;
     z-index: 1;
+    display: -webkit-box;
     margin: 0 0 7px;
     overflow: hidden;
     font-size: clamp(0.94rem, 1.25vw, 1.18rem);
     font-weight: 590;
     line-height: 1.2;
     letter-spacing: -0.015em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .card-description {
@@ -1075,7 +1076,7 @@ h1 > span {
 
     .function-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: repeat(4, minmax(0, 1fr));
+        grid-template-rows: repeat(3, minmax(0, 1fr));
         gap: 9px;
     }
 
@@ -1237,7 +1238,7 @@ h1 > span {
     }
 
     .function-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         grid-template-rows: repeat(2, minmax(0, 1fr));
     }
 

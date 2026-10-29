@@ -1,28 +1,23 @@
 (() => {
     'use strict';
 
-    const STORAGE_KEY = 'xalauncher.settings.v1';
+    const STORAGE_KEY = 'xaops.settings.v2';
     const MAX_TASKS = 4;
-    const ICONS = ['wifi', 'pos', 'slides', 'navigation', 'weather', 'flight', 'communications', 'support', 'globe', 'tools', 'link', 'grid'];
+    const ICONS = ['wifi', 'pos', 'slides', 'navigation', 'weather', 'flight', 'communications', 'support', 'globe', 'tools', 'link', 'grid', 'cctv', 'server'];
     const AVAILABLE_ICONS = new Set([...ICONS, 'arrow', 'edit', 'plus', 'close']);
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
     const defaults = {
         functions: [
-            { title: 'XaWiFi', description: 'Guest connectivity, access and captive portal management.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'wifi' },
-            { title: 'XaPOS', description: 'Shipboard sales, hospitality and point-of-service operations.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'pos' },
-            { title: 'SLIDES', description: 'Digital signage and onboard information at every screen.', url: 'https://xaxero.com/slides.html', icon: 'slides' },
-            { title: 'Navigation', description: 'Passage tools and marine utilities for the bridge team.', url: 'https://xaxero.com/tools.html', icon: 'navigation' },
-            { title: 'Weather & Sea State', description: 'Forecasts, observations and ocean conditions for planning.', url: 'https://xaxero.com/tools.html', icon: 'weather' },
-            { title: 'Flight Operations', description: 'Aviation performance tools for shipboard flight teams.', url: 'https://xaxero.com/fp/density', icon: 'flight' },
-            { title: 'Ship Communications', description: 'Satellite connectivity and fleet communication resources.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'communications' },
-            { title: 'Support Centre', description: 'Xaxero expertise, remote assistance and product guidance.', url: 'https://xaxero.com/About-Us.html', icon: 'support' }
+            { title: 'Hotel & Gangway Operations', description: 'Paxman PMS, POS, guest manifests and SOLAS gangway tracking.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'pos' },
+            { title: 'Guest Wi-Fi Control', description: 'XaWiFi captive portal, guest access and session management.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'wifi' },
+            { title: 'Staff Network Monitoring', description: 'Staff quota enforcement and Starlink/FX bandwidth tracking.', url: 'https://xaxero.com/Ship-Comms.html', icon: 'communications' },
+            { title: 'Digital Signage Management', description: 'Manage content across all seven public display screens.', url: 'https://xaxero.com/slides.html', icon: 'slides' },
+            { title: 'Internal CCTV (Hotel)', description: 'Dewarped XaCamView feeds for interior hotel zones.', url: 'https://xaxero.com', icon: 'cctv' },
+            { title: 'External CCTV (Bridge)', description: 'Dewarped feeds for exterior decks and navigation monitoring.', url: 'https://xaxero.com', icon: 'cctv' }
         ],
         tasks: [
-            { title: 'Xaxero website', description: '', url: 'https://xaxero.com', icon: 'globe' },
-            { title: 'Weather tools', description: '', url: 'https://xaxero.com/tools.html', icon: 'weather' },
-            { title: 'Flight deck', description: '', url: 'https://xaxero.com/fp/density', icon: 'flight' },
-            { title: 'Support', description: '', url: 'https://xaxero.com/About-Us.html', icon: 'support' }
+            { title: 'Server status', description: '', url: 'https://xaxero.com', icon: 'server' }
         ]
     };
 
@@ -210,12 +205,12 @@
 
         const eyebrowLine = makeElement('span');
         eyebrowLine.setAttribute('aria-hidden', 'true');
-        introEyebrow.replaceChildren(eyebrowLine, document.createTextNode(setupMode ? 'Workspace setup' : 'Operations console'));
-        pageTitle.replaceChildren(document.createTextNode(setupMode ? 'Make this workspace ' : 'Your business. '));
+        introEyebrow.replaceChildren(eyebrowLine, document.createTextNode(setupMode ? 'Workspace setup' : 'Xaxero Shipboard Operations Suite'));
+        pageTitle.replaceChildren(document.createTextNode(setupMode ? 'Make this workspace ' : 'Shipboard operations. '));
         pageTitle.append(makeElement('span', '', setupMode ? 'yours.' : 'One launch point.'));
         introCopy.textContent = setupMode
             ? 'Select any business function or special task to edit its details. Changes are saved on this device.'
-            : 'Essential tools and services, thoughtfully organised in one private, local workspace.';
+            : 'Hotel, network, signage and camera systems, organised for the working ship.';
     }
 
     function renderAll() {
