@@ -1,8 +1,7 @@
 (() => {
     'use strict';
 
-    const STORAGE_KEY = 'xaops.settings.v2';
-    const SETUP_PASSWORD = 'admin123';
+    const API_URL = 'api/config.php';
     const MAX_TASKS = 4;
     const ICONS = ['wifi', 'pos', 'slides', 'navigation', 'weather', 'flight', 'communications', 'support', 'globe', 'tools', 'link', 'grid', 'cctv', 'server'];
     const AVAILABLE_ICONS = new Set([...ICONS, 'arrow', 'edit', 'plus', 'close']);
@@ -50,7 +49,10 @@
     let setupMode = false;
     let editing = null;
     let toastTimer;
-    let state = loadState();
+    let serverReady = false;
+    let adminPassword = '';
+    let saveInProgress = false;
+    let state = freshDefaults();
 
     function freshDefaults() {
         return JSON.parse(JSON.stringify(defaults));
@@ -92,22 +94,37 @@
         };
     }
 
-    function loadState() {
+    async function postConfig(action, password, config = null) {
+        const body = { action, password };
+        if (config !== null) body.config = config;
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(body),
+            cache: 'no-store'
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(payload?.error || `Server request failed (${response.status}).`);
+        return payload;
+    }
+
+    async function loadState() {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            return saved ? cleanState(JSON.parse(saved)) : freshDefaults();
-        } catch {
-            return freshDefaults();
+            const response = await fetch(API_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || !payload) throw new Error(payload?.error || `Server request failed (${response.status}).`);
+            state = cleanState(payload);
+            serverReady = true;
+            renderAll();
+        } catch (error) {
+            serverReady = false;
+            showToast(`Configuration load failed: ${error.message}`);
         }
     }
 
-    function saveState() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            return true;
-        } catch {
-            return false;
-        }
+    async function saveState(nextState) {
+        const payload = await postConfig('save', adminPassword, nextState);
+        state = cleanState(payload.config);
     }
 
     function makeIcon(name) {
@@ -214,7 +231,7 @@
         pageTitle.replaceChildren(document.createTextNode(setupMode ? 'Make this workspace ' : 'Shipboard operations. '));
         pageTitle.append(makeElement('span', '', setupMode ? 'yours.' : 'One launch point.'));
         introCopy.textContent = setupMode
-            ? 'Select any business function or special task to edit its details. Changes are saved on this device.'
+            ? 'Select any business function or special task to edit its details. Changes are saved permanently on the server.'
             : 'Hotel, network, signage and camera systems, organised for the working ship.';
     }
 
@@ -282,9 +299,19 @@
     }
 
     setupToggle.addEventListener('click', () => {
+        if (saveInProgress) {
+            showToast('Please wait for the server save to finish.');
+            return;
+        }
         if (setupMode) {
             setupMode = false;
+            adminPassword = '';
             renderAll();
+            return;
+        }
+        if (!serverReady) {
+            showToast('Server configuration is unavailable. Retrying…');
+            loadState();
             return;
         }
         setupPassword.value = '';
@@ -294,18 +321,29 @@
         requestAnimationFrame(() => setupPassword.focus());
     });
 
-    setupForm.addEventListener('submit', (event) => {
+    setupForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        if (setupPassword.value !== SETUP_PASSWORD) {
+        if (saveInProgress) return;
+        saveInProgress = true;
+        const submitButton = setupForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            const password = setupPassword.value;
+            await postConfig('authenticate', password);
+            adminPassword = password;
+            setupDialog.close();
+            setupMode = true;
+            renderAll();
+        } catch (error) {
             setupPassword.setAttribute('aria-invalid', 'true');
+            passwordError.textContent = error.message;
             passwordError.hidden = false;
             setupPassword.focus();
             setupPassword.select();
-            return;
+        } finally {
+            saveInProgress = false;
+            submitButton.disabled = false;
         }
-        setupDialog.close();
-        setupMode = true;
-        renderAll();
     });
 
     setupPassword.addEventListener('input', () => {
@@ -316,16 +354,25 @@
     document.getElementById('closeSetupDialog').addEventListener('click', () => setupDialog.close());
     document.getElementById('cancelSetup').addEventListener('click', () => setupDialog.close());
 
-    resetButton.addEventListener('click', () => {
-        if (!window.confirm('Restore all business functions and special tasks to their defaults?')) return;
-        state = freshDefaults();
-        saveState();
-        renderAll();
-        showToast('Default workspace restored');
+    resetButton.addEventListener('click', async () => {
+        if (saveInProgress || !window.confirm('Restore all business functions and special tasks to their defaults?')) return;
+        saveInProgress = true;
+        resetButton.disabled = true;
+        try {
+            await saveState(freshDefaults());
+            renderAll();
+            showToast('Default workspace restored on the server');
+        } catch (error) {
+            showToast(`Reset failed: ${error.message}`);
+        } finally {
+            saveInProgress = false;
+            resetButton.disabled = false;
+        }
     });
 
-    editorForm.addEventListener('submit', (event) => {
+    editorForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (saveInProgress) return;
         if (!editing || !editorForm.checkValidity()) {
             editorForm.reportValidity();
             return;
@@ -339,32 +386,43 @@
             return;
         }
 
+        const editContext = { ...editing };
         const selectedIcon = new FormData(editorForm).get('icon');
         const item = {
             title: itemTitle.value.trim(),
-            description: editing.kind === 'function' ? itemDescription.value.trim() : '',
+            description: editContext.kind === 'function' ? itemDescription.value.trim() : '',
             url,
             icon: ICONS.includes(selectedIcon) ? selectedIcon : 'link'
         };
+        const nextState = { functions: [...state.functions], tasks: [...state.tasks] };
 
-        if (editing.kind === 'function') {
-            state.functions[editing.index] = item;
-        } else if (editing.index === -1) {
-            if (state.tasks.length >= MAX_TASKS) return;
-            state.tasks.push(item);
+        if (editContext.kind === 'function') {
+            nextState.functions[editContext.index] = item;
+        } else if (editContext.index === -1) {
+            if (nextState.tasks.length >= MAX_TASKS) return;
+            nextState.tasks.push(item);
         } else {
-            state.tasks[editing.index] = item;
+            nextState.tasks[editContext.index] = item;
         }
 
-        const saved = saveState();
-        const title = item.title;
-        const selector = editing.kind === 'function'
-            ? `[data-function-index="${editing.index}"]`
-            : `[data-task-index="${state.tasks.indexOf(item)}"]`;
-        renderAll();
-        closeEditor();
-        requestAnimationFrame(() => document.querySelector(selector)?.focus());
-        showToast(saved ? `${title} saved` : `${title} updated for this session; browser storage is unavailable`);
+        saveInProgress = true;
+        const submitButton = editorForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            await saveState(nextState);
+            const selector = editContext.kind === 'function'
+                ? `[data-function-index="${editContext.index}"]`
+                : `[data-task-index="${nextState.tasks.indexOf(item)}"]`;
+            renderAll();
+            closeEditor();
+            requestAnimationFrame(() => document.querySelector(selector)?.focus());
+            showToast(`${item.title} saved to the server`);
+        } catch (error) {
+            showToast(`Save failed: ${error.message}`);
+        } finally {
+            saveInProgress = false;
+            submitButton.disabled = false;
+        }
     });
 
     itemUrl.addEventListener('input', () => {
@@ -374,7 +432,11 @@
 
     document.getElementById('closeEditor').addEventListener('click', closeEditor);
     document.getElementById('cancelEdit').addEventListener('click', closeEditor);
-    editorDialog.addEventListener('cancel', () => {
+    editorDialog.addEventListener('cancel', (event) => {
+        if (saveInProgress) {
+            event.preventDefault();
+            return;
+        }
         editing = null;
     });
     editorDialog.addEventListener('click', (event) => {
@@ -383,32 +445,39 @@
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeEditor();
     });
 
-    deleteTask.addEventListener('click', () => {
-        if (!editing || editing.kind !== 'task' || editing.index < 0) return;
-        const title = state.tasks[editing.index].title;
+    deleteTask.addEventListener('click', async () => {
+        if (saveInProgress || !editing || editing.kind !== 'task' || editing.index < 0) return;
+        const editContext = { ...editing };
+        const title = state.tasks[editContext.index].title;
         if (!window.confirm(`Remove the “${title}” special task?`)) return;
-        state.tasks.splice(editing.index, 1);
-        saveState();
-        renderAll();
-        closeEditor();
-        setupToggle.focus();
-        showToast(`${title} removed`);
+        const nextState = { functions: [...state.functions], tasks: [...state.tasks] };
+        nextState.tasks.splice(editContext.index, 1);
+        saveInProgress = true;
+        deleteTask.disabled = true;
+        try {
+            await saveState(nextState);
+            renderAll();
+            closeEditor();
+            setupToggle.focus();
+            showToast(`${title} removed from the server`);
+        } catch (error) {
+            showToast(`Remove failed: ${error.message}`);
+        } finally {
+            saveInProgress = false;
+            deleteTask.disabled = false;
+        }
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && setupMode && !editorDialog.open) {
+        if (event.key === 'Escape' && setupMode && !editorDialog.open && !saveInProgress) {
             setupMode = false;
+            adminPassword = '';
             renderAll();
             setupToggle.focus();
         }
     });
 
-    window.addEventListener('storage', (event) => {
-        if (event.key !== STORAGE_KEY || editorDialog.open) return;
-        state = loadState();
-        renderAll();
-    });
-
     document.getElementById('copyrightYear').textContent = String(new Date().getFullYear());
     renderAll();
+    loadState();
 })();

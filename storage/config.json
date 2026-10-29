@@ -1,0 +1,48 @@
+{
+    "functions": [
+        {
+            "title": "Hotel & Gangway Operations",
+            "description": "Paxman PMS, POS, guest manifests and SOLAS gangway tracking.",
+            "url": "https://xaxero.com/Ship-Comms.html",
+            "icon": "pos"
+        },
+        {
+            "title": "Guest Wi-Fi Control",
+            "description": "XaWiFi captive portal, guest access and session management.",
+            "url": "https://xaxero.com/Ship-Comms.html",
+            "icon": "wifi"
+        },
+        {
+            "title": "Staff Network Monitoring",
+            "description": "Staff quota enforcement and Starlink/FX bandwidth tracking.",
+            "url": "https://xaxero.com/Ship-Comms.html",
+            "icon": "communications"
+        },
+        {
+            "title": "Digital Signage Management",
+            "description": "Manage content across all seven public display screens.",
+            "url": "https://xaxero.com/slides.html",
+            "icon": "slides"
+        },
+        {
+            "title": "Internal CCTV (Hotel)",
+            "description": "Dewarped XaCamView feeds for interior hotel zones.",
+            "url": "https://xaxero.com",
+            "icon": "cctv"
+        },
+        {
+            "title": "External CCTV (Bridge)",
+            "description": "Dewarped feeds for exterior decks and navigation monitoring.",
+            "url": "https://xaxero.com",
+            "icon": "cctv"
+        }
+    ],
+    "tasks": [
+        {
+            "title": "Server status",
+            "description": "",
+            "url": "https://xaxero.com",
+            "icon": "server"
+        }
+    ]
+}
