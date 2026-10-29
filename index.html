@@ -136,6 +136,34 @@
         </footer>
     </div>
 
+    <dialog class="editor-dialog access-dialog" id="setupDialog" aria-labelledby="setupDialogTitle">
+        <form id="setupForm" novalidate>
+            <header class="dialog-header">
+                <div>
+                    <p class="eyebrow">Protected area</p>
+                    <h2 id="setupDialogTitle">Enter setup</h2>
+                </div>
+                <button class="icon-button" id="closeSetupDialog" type="button" aria-label="Close password prompt">
+                    <svg aria-hidden="true"><use href="#icon-close"></use></svg>
+                </button>
+            </header>
+            <div class="dialog-body">
+                <p class="dialog-intro">Enter the administrator password to configure this workspace.</p>
+                <div class="field">
+                    <label for="setupPassword">Password</label>
+                    <input id="setupPassword" name="password" type="password" autocomplete="current-password" required>
+                    <span class="field-error" id="passwordError" role="alert" hidden>Incorrect password. Please try again.</span>
+                </div>
+            </div>
+            <footer class="dialog-footer">
+                <div class="dialog-actions">
+                    <button class="secondary-button" id="cancelSetup" type="button">Cancel</button>
+                    <button class="primary-button" type="submit">Unlock setup</button>
+                </div>
+            </footer>
+        </form>
+    </dialog>
+
     <dialog class="editor-dialog" id="editorDialog" aria-labelledby="editorTitle">
         <form id="editorForm" novalidate>
             <header class="dialog-header">

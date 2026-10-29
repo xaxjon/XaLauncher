@@ -2,6 +2,7 @@
     'use strict';
 
     const STORAGE_KEY = 'xaops.settings.v2';
+    const SETUP_PASSWORD = 'admin123';
     const MAX_TASKS = 4;
     const ICONS = ['wifi', 'pos', 'slides', 'navigation', 'weather', 'flight', 'communications', 'support', 'globe', 'tools', 'link', 'grid', 'cctv', 'server'];
     const AVAILABLE_ICONS = new Set([...ICONS, 'arrow', 'edit', 'plus', 'close']);
@@ -24,6 +25,10 @@
     const functionGrid = document.getElementById('functionGrid');
     const specialTasks = document.getElementById('specialTasks');
     const setupToggle = document.getElementById('setupToggle');
+    const setupDialog = document.getElementById('setupDialog');
+    const setupForm = document.getElementById('setupForm');
+    const setupPassword = document.getElementById('setupPassword');
+    const passwordError = document.getElementById('passwordError');
     const menuLabel = document.getElementById('menuLabel');
     const introEyebrow = document.getElementById('introEyebrow');
     const pageTitle = document.getElementById('pageTitle');
@@ -277,9 +282,39 @@
     }
 
     setupToggle.addEventListener('click', () => {
-        setupMode = !setupMode;
+        if (setupMode) {
+            setupMode = false;
+            renderAll();
+            return;
+        }
+        setupPassword.value = '';
+        setupPassword.removeAttribute('aria-invalid');
+        passwordError.hidden = true;
+        setupDialog.showModal();
+        requestAnimationFrame(() => setupPassword.focus());
+    });
+
+    setupForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (setupPassword.value !== SETUP_PASSWORD) {
+            setupPassword.setAttribute('aria-invalid', 'true');
+            passwordError.hidden = false;
+            setupPassword.focus();
+            setupPassword.select();
+            return;
+        }
+        setupDialog.close();
+        setupMode = true;
         renderAll();
     });
+
+    setupPassword.addEventListener('input', () => {
+        setupPassword.removeAttribute('aria-invalid');
+        passwordError.hidden = true;
+    });
+
+    document.getElementById('closeSetupDialog').addEventListener('click', () => setupDialog.close());
+    document.getElementById('cancelSetup').addEventListener('click', () => setupDialog.close());
 
     resetButton.addEventListener('click', () => {
         if (!window.confirm('Restore all business functions and special tasks to their defaults?')) return;
