@@ -32,7 +32,10 @@ git init
 git remote add origin https://github.com/xaxjon/XaLauncher.git
 git fetch origin
 git checkout -f -t origin/main
+cp api/config.example.php api/config.php
 ```
+
+Set `ADMIN_PASSWORD` in your local `api/config.php`. This file is intentionally ignored by Git, so server-specific password changes will not be overwritten by future checkouts. The tracked `api/config.example.php` template contains the default `admin123` password.
 
 For Apache on Ubuntu, allow the web server to write the configuration:
 
@@ -104,7 +107,8 @@ Writes require the administrator password. The API accepts six business function
 index.html             Launcher interface and local SVG icons
 styles.css             Responsive Xaxero visual design
 app.js                 Rendering, editing, and API client
-api/config.php         Authentication, validation, and persistent writes
+api/config.example.php Tracked API template
+api/config.php         Local server API settings (ignored by Git)
 storage/config.json    Live server configuration
 assets/                Local Xaxero branding
 LICENSE                Project license
