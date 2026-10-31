@@ -65,9 +65,41 @@ function cleanItem($item, $isFunction, $icons, &$error) {
     ];
 }
 
+function cleanContent($content, &$error) {
+    if (!is_array($content)) {
+        $error = 'Page text is missing.';
+        return null;
+    }
+    $limits = [
+        'brandTitle' => 24,
+        'brandSubtitle' => 48,
+        'eyebrow' => 60,
+        'heading' => 60,
+        'headingAccent' => 60,
+        'intro' => 160,
+        'status' => 40,
+        'specialTasks' => 30,
+        'footer' => 80
+    ];
+    $clean = [];
+    foreach ($limits as $field => $limit) {
+        if (!isset($content[$field]) || !is_string($content[$field])) {
+            $error = 'A page text field is missing.';
+            return null;
+        }
+        $value = trim($content[$field]);
+        if ($value === '' || strlen($value) > $limit) {
+            $error = 'A page text field is empty or too long.';
+            return null;
+        }
+        $clean[$field] = $value;
+    }
+    return $clean;
+}
+
 function cleanConfig($config, &$error) {
-    if (!is_array($config) || !isset($config['functions'], $config['tasks'])) {
-        $error = 'Configuration must contain functions and tasks.';
+    if (!is_array($config) || !isset($config['functions'], $config['tasks'], $config['content'])) {
+        $error = 'Configuration must contain functions, tasks, and page text.';
         return null;
     }
     if (!isList($config['functions']) || count($config['functions']) !== 6 || !isList($config['tasks']) || count($config['tasks']) > 4) {
@@ -76,7 +108,8 @@ function cleanConfig($config, &$error) {
     }
 
     $icons = ['wifi', 'pos', 'slides', 'navigation', 'weather', 'flight', 'communications', 'support', 'globe', 'tools', 'link', 'grid', 'cctv', 'server'];
-    $clean = ['functions' => [], 'tasks' => []];
+    $clean = ['functions' => [], 'tasks' => [], 'content' => cleanContent($config['content'], $error)];
+    if ($clean['content'] === null) return null;
 
     foreach ($config['functions'] as $item) {
         $cleaned = cleanItem($item, true, $icons, $error);

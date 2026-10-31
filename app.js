@@ -18,7 +18,18 @@
         ],
         tasks: [
             { title: 'Server status', description: '', url: 'https://xaxero.com', icon: 'server' }
-        ]
+        ],
+        content: {
+            brandTitle: 'XaOps',
+            brandSubtitle: 'Shipboard Operations Suite',
+            eyebrow: 'Xaxero Shipboard Operations Suite',
+            heading: 'Shipboard operations.',
+            headingAccent: 'One launch point.',
+            intro: 'Hotel, network, signage and camera systems, organised for the working ship.',
+            status: 'Server-backed workspace',
+            specialTasks: 'Special tasks',
+            footer: 'Server saved. Ready when you are.'
+        }
     };
 
     const functionGrid = document.getElementById('functionGrid');
@@ -33,6 +44,15 @@
     const pageTitle = document.getElementById('pageTitle');
     const introCopy = document.getElementById('introCopy');
     const resetButton = document.getElementById('resetButton');
+    const contentButton = document.getElementById('contentButton');
+    const contentDialog = document.getElementById('contentDialog');
+    const contentForm = document.getElementById('contentForm');
+    const contentSaveError = document.getElementById('contentSaveError');
+    const brandTitle = document.getElementById('brandTitle');
+    const brandSubtitle = document.getElementById('brandSubtitle');
+    const statusText = document.getElementById('statusText');
+    const specialTasksLabel = document.getElementById('specialTasksLabel');
+    const footerTagline = document.getElementById('footerTagline');
     const editorDialog = document.getElementById('editorDialog');
     const editorForm = document.getElementById('editorForm');
     const editorKind = document.getElementById('editorKind');
@@ -83,6 +103,21 @@
         };
     }
 
+    function cleanContent(value, fallback) {
+        const content = value && typeof value === 'object' ? value : {};
+        return {
+            brandTitle: cleanText(content.brandTitle, fallback.brandTitle, 24),
+            brandSubtitle: cleanText(content.brandSubtitle, fallback.brandSubtitle, 48),
+            eyebrow: cleanText(content.eyebrow, fallback.eyebrow, 60),
+            heading: cleanText(content.heading, fallback.heading, 60),
+            headingAccent: cleanText(content.headingAccent, fallback.headingAccent, 60),
+            intro: cleanText(content.intro, fallback.intro, 160),
+            status: cleanText(content.status, fallback.status, 40),
+            specialTasks: cleanText(content.specialTasks, fallback.specialTasks, 30),
+            footer: cleanText(content.footer, fallback.footer, 80)
+        };
+    }
+
     function cleanState(value) {
         const fallback = freshDefaults();
         if (!value || typeof value !== 'object') return fallback;
@@ -90,7 +125,8 @@
         const sourceTasks = Array.isArray(value.tasks) ? value.tasks : fallback.tasks;
         return {
             functions: fallback.functions.map((item, index) => cleanItem(sourceFunctions[index], item, true)),
-            tasks: sourceTasks.slice(0, MAX_TASKS).map((item, index) => cleanItem(item, fallback.tasks[index] || { title: 'Special task', description: '', url: 'https://xaxero.com', icon: 'link' }, false))
+            tasks: sourceTasks.slice(0, MAX_TASKS).map((item, index) => cleanItem(item, fallback.tasks[index] || { title: 'Special task', description: '', url: 'https://xaxero.com', icon: 'link' }, false)),
+            content: cleanContent(value.content, fallback.content)
         };
     }
 
@@ -224,15 +260,21 @@
         setupToggle.setAttribute('aria-label', setupMode ? 'Finish setup' : 'Enter setup mode');
         menuLabel.textContent = setupMode ? 'Done' : 'Setup';
         resetButton.hidden = !setupMode;
+        contentButton.hidden = !setupMode;
+        brandTitle.textContent = state.content.brandTitle;
+        brandSubtitle.textContent = state.content.brandSubtitle;
+        statusText.textContent = state.content.status;
+        specialTasksLabel.textContent = state.content.specialTasks;
+        footerTagline.textContent = state.content.footer;
 
         const eyebrowLine = makeElement('span');
         eyebrowLine.setAttribute('aria-hidden', 'true');
-        introEyebrow.replaceChildren(eyebrowLine, document.createTextNode(setupMode ? 'Workspace setup' : 'Xaxero Shipboard Operations Suite'));
-        pageTitle.replaceChildren(document.createTextNode(setupMode ? 'Make this workspace ' : 'Shipboard operations. '));
-        pageTitle.append(makeElement('span', '', setupMode ? 'yours.' : 'One launch point.'));
+        introEyebrow.replaceChildren(eyebrowLine, document.createTextNode(setupMode ? 'Workspace setup' : state.content.eyebrow));
+        pageTitle.replaceChildren(document.createTextNode(setupMode ? 'Make this workspace ' : `${state.content.heading} `));
+        pageTitle.append(makeElement('span', '', setupMode ? 'yours.' : state.content.headingAccent));
         introCopy.textContent = setupMode
-            ? 'Select any business function or special task to edit its details. Changes are saved permanently on the server.'
-            : 'Hotel, network, signage and camera systems, organised for the working ship.';
+            ? 'Select a module, special task, or Page text. Changes are saved permanently on the server.'
+            : state.content.intro;
     }
 
     function renderAll() {
@@ -354,8 +396,57 @@
     document.getElementById('closeSetupDialog').addEventListener('click', () => setupDialog.close());
     document.getElementById('cancelSetup').addEventListener('click', () => setupDialog.close());
 
+    contentButton.addEventListener('click', () => {
+        if (saveInProgress) return;
+        Object.entries(state.content).forEach(([field, value]) => {
+            contentForm.elements.namedItem(field).value = value;
+        });
+        contentSaveError.hidden = true;
+        contentDialog.showModal();
+        requestAnimationFrame(() => contentForm.elements.namedItem('brandTitle').focus());
+    });
+
+    document.getElementById('closeContent').addEventListener('click', () => contentDialog.close());
+    document.getElementById('cancelContent').addEventListener('click', () => contentDialog.close());
+    contentDialog.addEventListener('cancel', (event) => {
+        if (saveInProgress) event.preventDefault();
+    });
+
+    contentForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (saveInProgress) return;
+        if (!contentForm.checkValidity()) {
+            contentForm.reportValidity();
+            return;
+        }
+        const data = new FormData(contentForm);
+        const content = {};
+        Object.keys(state.content).forEach((field) => {
+            content[field] = String(data.get(field)).trim();
+        });
+        const nextState = { functions: [...state.functions], tasks: [...state.tasks], content };
+        const submitButton = contentForm.querySelector('button[type="submit"]');
+        saveInProgress = true;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving…';
+        contentSaveError.hidden = true;
+        try {
+            await saveState(nextState);
+            renderAll();
+            contentDialog.close();
+            showToast('Page text saved to the server');
+        } catch (error) {
+            contentSaveError.textContent = `Save failed: ${error.message}`;
+            contentSaveError.hidden = false;
+        } finally {
+            saveInProgress = false;
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save changes';
+        }
+    });
+
     resetButton.addEventListener('click', async () => {
-        if (saveInProgress || !window.confirm('Restore all business functions and special tasks to their defaults?')) return;
+        if (saveInProgress || !window.confirm('Restore all modules, special tasks, and page text to their defaults?')) return;
         saveInProgress = true;
         resetButton.disabled = true;
         try {
@@ -394,7 +485,7 @@
             url,
             icon: ICONS.includes(selectedIcon) ? selectedIcon : 'link'
         };
-        const nextState = { functions: [...state.functions], tasks: [...state.tasks] };
+        const nextState = { functions: [...state.functions], tasks: [...state.tasks], content: { ...state.content } };
 
         if (editContext.kind === 'function') {
             nextState.functions[editContext.index] = item;
@@ -450,7 +541,7 @@
         const editContext = { ...editing };
         const title = state.tasks[editContext.index].title;
         if (!window.confirm(`Remove the “${title}” special task?`)) return;
-        const nextState = { functions: [...state.functions], tasks: [...state.tasks] };
+        const nextState = { functions: [...state.functions], tasks: [...state.tasks], content: { ...state.content } };
         nextState.tasks.splice(editContext.index, 1);
         saveInProgress = true;
         deleteTask.disabled = true;
@@ -469,7 +560,7 @@
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && setupMode && !editorDialog.open && !saveInProgress) {
+        if (event.key === 'Escape' && setupMode && !editorDialog.open && !contentDialog.open && !saveInProgress) {
             setupMode = false;
             adminPassword = '';
             renderAll();

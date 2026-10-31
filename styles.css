@@ -371,6 +371,11 @@ h1 > span {
     text-align: right;
 }
 
+.setup-actions {
+    display: flex;
+    gap: 16px;
+}
+
 .text-button {
     padding: 3px 0;
     border: 0;
@@ -626,7 +631,7 @@ h1 > span {
     text-transform: uppercase;
 }
 
-.special-heading span {
+.special-heading .special-heading-line {
     width: 18px;
     height: 1px;
     background: var(--dim);
@@ -716,6 +721,19 @@ h1 > span {
 
 .access-dialog {
     width: min(420px, calc(100vw - 32px));
+}
+
+.content-dialog {
+    width: min(640px, calc(100vw - 32px));
+}
+
+.content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.content-grid .field-wide {
+    grid-column: 1 / -1;
+    margin: 0;
 }
 
 .dialog-intro {
@@ -1081,6 +1099,18 @@ h1 > span {
         display: none;
     }
 
+    .setup-mode .intro-aside {
+        display: flex;
+    }
+
+    .setup-mode .intro-aside > p {
+        display: none;
+    }
+
+    .content-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .eyebrow {
         margin-bottom: 6px;
         font-size: 0.54rem;
@@ -1227,6 +1257,14 @@ h1 > span {
         display: none;
     }
 
+    .setup-mode .intro-aside {
+        display: flex;
+    }
+
+    .setup-mode .intro-aside > p {
+        display: none;
+    }
+
     h1 {
         font-size: 1.25rem;
     }
@@ -1242,6 +1280,14 @@ h1 > span {
 
 @media (max-height: 430px) {
     .intro {
+        display: none;
+    }
+
+    .setup-mode .intro {
+        display: flex;
+    }
+
+    .setup-mode .intro > div:first-child {
         display: none;
     }
 

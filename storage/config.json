@@ -44,5 +44,16 @@
             "url": "https://xaxero.com",
             "icon": "server"
         }
-    ]
+    ],
+    "content": {
+        "brandTitle": "XaOps",
+        "brandSubtitle": "Shipboard Operations Suite",
+        "eyebrow": "Xaxero Shipboard Operations Suite",
+        "heading": "Shipboard operations.",
+        "headingAccent": "One launch point.",
+        "intro": "Hotel, network, signage and camera systems, organised for the working ship.",
+        "status": "Server-backed workspace",
+        "specialTasks": "Special tasks",
+        "footer": "Server saved. Ready when you are."
+    }
 }

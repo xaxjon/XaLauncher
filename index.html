@@ -95,12 +95,12 @@
                 <img class="brand-logo" src="assets/xaxero-logo.png" alt="Xaxero">
                 <span class="brand-divider" aria-hidden="true"></span>
                 <span class="brand-product">
-                    <strong>XaOps</strong>
-                    <span>Shipboard Operations Suite</span>
+                    <strong id="brandTitle">XaOps</strong>
+                    <span id="brandSubtitle">Shipboard Operations Suite</span>
                 </span>
             </a>
             <div class="header-actions">
-                <span class="local-status"><span class="status-light" aria-hidden="true"></span>Server-backed workspace</span>
+                <span class="local-status"><span class="status-light" aria-hidden="true"></span><span id="statusText">Server-backed workspace</span></span>
                 <button class="menu-toggle" id="setupToggle" type="button" aria-pressed="false" aria-label="Enter setup mode">
                     <span id="menuLabel">Setup</span>
                     <span class="hamburger" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -116,7 +116,10 @@
                 </div>
                 <div class="intro-aside">
                     <p id="introCopy">Hotel, network, signage and camera systems, organised for the working ship.</p>
-                    <button class="text-button" id="resetButton" type="button" hidden>Restore defaults</button>
+                    <div class="setup-actions">
+                        <button class="text-button" id="contentButton" type="button" hidden>Page text</button>
+                        <button class="text-button" id="resetButton" type="button" hidden>Restore defaults</button>
+                    </div>
                 </div>
             </section>
             <section class="functions-section" aria-label="Business functions">
@@ -127,10 +130,10 @@
         <footer class="footer">
             <div class="footer-brand">
                 <p>&copy; <span id="copyrightYear"></span> Xaxero Marine Software Engineering</p>
-                <span>Server saved. Ready when you are.</span>
+                <span id="footerTagline">Server saved. Ready when you are.</span>
             </div>
             <nav class="special-area" aria-label="Special tasks">
-                <p class="special-heading">Special tasks <span aria-hidden="true"></span></p>
+                <p class="special-heading"><span id="specialTasksLabel">Special tasks</span> <span class="special-heading-line" aria-hidden="true"></span></p>
                 <div class="special-tasks" id="specialTasks"></div>
             </nav>
         </footer>
@@ -159,6 +162,65 @@
                 <div class="dialog-actions">
                     <button class="secondary-button" id="cancelSetup" type="button">Cancel</button>
                     <button class="primary-button" type="submit">Unlock setup</button>
+                </div>
+            </footer>
+        </form>
+    </dialog>
+
+    <dialog class="editor-dialog content-dialog" id="contentDialog" aria-labelledby="contentDialogTitle">
+        <form id="contentForm" novalidate>
+            <header class="dialog-header">
+                <div>
+                    <p class="eyebrow">Workspace content</p>
+                    <h2 id="contentDialogTitle">Edit page text</h2>
+                </div>
+                <button class="icon-button" id="closeContent" type="button" aria-label="Close page text editor">
+                    <svg aria-hidden="true"><use href="#icon-close"></use></svg>
+                </button>
+            </header>
+            <div class="dialog-body content-grid">
+                <div class="field">
+                    <label for="contentBrandTitle">Brand title</label>
+                    <input id="contentBrandTitle" name="brandTitle" type="text" maxlength="24" required>
+                </div>
+                <div class="field">
+                    <label for="contentBrandSubtitle">Brand subtitle</label>
+                    <input id="contentBrandSubtitle" name="brandSubtitle" type="text" maxlength="48" required>
+                </div>
+                <div class="field field-wide">
+                    <label for="contentEyebrow">Eyebrow heading</label>
+                    <input id="contentEyebrow" name="eyebrow" type="text" maxlength="60" required>
+                </div>
+                <div class="field">
+                    <label for="contentHeading">Main heading</label>
+                    <input id="contentHeading" name="heading" type="text" maxlength="60" required>
+                </div>
+                <div class="field">
+                    <label for="contentHeadingAccent">Highlighted heading</label>
+                    <input id="contentHeadingAccent" name="headingAccent" type="text" maxlength="60" required>
+                </div>
+                <div class="field field-wide">
+                    <label for="contentIntro">Introductory comment</label>
+                    <textarea id="contentIntro" name="intro" rows="2" maxlength="160" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="contentStatus">Status label</label>
+                    <input id="contentStatus" name="status" type="text" maxlength="40" required>
+                </div>
+                <div class="field">
+                    <label for="contentSpecialTasks">Special-task heading</label>
+                    <input id="contentSpecialTasks" name="specialTasks" type="text" maxlength="30" required>
+                </div>
+                <div class="field field-wide">
+                    <label for="contentFooter">Footer tagline</label>
+                    <input id="contentFooter" name="footer" type="text" maxlength="80" required>
+                </div>
+                <p class="field-error field-wide" id="contentSaveError" role="alert" hidden></p>
+            </div>
+            <footer class="dialog-footer">
+                <div class="dialog-actions">
+                    <button class="secondary-button" id="cancelContent" type="button">Cancel</button>
+                    <button class="primary-button" type="submit">Save changes</button>
                 </div>
             </footer>
         </form>

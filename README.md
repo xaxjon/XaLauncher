@@ -64,7 +64,9 @@ To configure the launcher:
 4. Edit its title, description where applicable, URL, and icon.
 5. Select **Save changes**.
 
-Use **Add task** to fill any of the three spare special-task slots. **Restore defaults** resets all modules and tasks on the server. Select **Done** or press **Escape** to leave Setup mode.
+Select **Page text** in Setup to edit the brand title and subtitle, eyebrow and main headings, introductory comment, status label, special-task heading, and footer tagline. The legal Xaxero copyright remains fixed.
+
+Use **Add task** to fill any of the three spare special-task slots. **Restore defaults** resets all modules, tasks, and page text on the server. Select **Done** or press **Escape** to leave Setup mode.
 
 The default password is:
 
